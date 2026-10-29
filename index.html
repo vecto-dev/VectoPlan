@@ -1,0 +1,2132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+    <meta name="theme-color" content="#0A0F1A">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>VectoPlan — Personal Operating System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --trans-dur: 0.5s;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: background-color var(--trans-dur) ease, color var(--trans-dur) ease, font-family 0.3s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            transition: background var(--trans-dur) ease, border-color var(--trans-dur) ease, color var(--trans-dur) ease;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            padding: 1.75rem 1.25rem;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 1.75rem 2rem;
+            transition: margin var(--trans-dur) ease;
+            min-height: 100vh;
+        }
+
+        .nav-link {
+            padding: 0.7rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .nav-link i { font-size: 1.15rem; width: 22px; text-align: center; }
+
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: opacity, transform;
+        }
+        .page.active-page { display: block; }
+        .page.fade-in { opacity: 1; transform: translateY(0); }
+
+        /* ========== THEME 1: HOME (now Claymorphism) ========== */
+        body[data-theme="home"] {
+            background-color: #e8eef2;
+            color: #4a5568;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(49,130,206,0.07) 0%, transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(99,102,241,0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 90%, rgba(56,189,248,0.05) 0%, transparent 35%),
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(163,177,198,0.12) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(163,177,198,0.12) 40px);
+            background-attachment: fixed;
+        }
+        body[data-theme="home"] .sidebar { background: #e8eef2; color: #718096; border-right: none; }
+        body[data-theme="home"] .nav-link:hover { color: #2d3748; }
+        body[data-theme="home"] .nav-link.active {
+            background: #e8eef2; color: #3182ce;
+            box-shadow: inset 4px 4px 8px rgba(163,177,198,0.4), inset -4px -4px 8px rgba(255,255,255,0.9);
+        }
+
+        .clay-card {
+            background: #e8eef2;
+            border-radius: 28px;
+            padding: 1.6rem;
+            box-shadow: 10px 10px 20px rgba(163,177,198,0.45), -10px -10px 20px rgba(255,255,255,0.9),
+                        inset 3px 3px 6px rgba(255,255,255,0.85), inset -3px -3px 6px rgba(163,177,198,0.25);
+            transition: transform 0.25s ease;
+        }
+        .clay-card:hover { transform: scale(1.015); }
+        .clay-bar-bg {
+            background: #e8eef2; border-radius: 16px; height: 14px;
+            box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.9);
+            overflow: hidden;
+        }
+        .clay-bar-fill {
+            height: 100%; border-radius: 16px; background: #3182ce;
+            box-shadow: inset 2px 2px 3px rgba(255,255,255,0.35), inset -2px -2px 3px rgba(0,0,0,0.15);
+        }
+        .clay-btn {
+            background: #e8eef2; border-radius: 14px; padding: 0.6rem 1.25rem; font-weight: 600; color: #4a5568;
+            box-shadow: 5px 5px 10px rgba(163,177,198,0.45), -5px -5px 10px rgba(255,255,255,0.9);
+            transition: all 0.15s ease; cursor: pointer; border: none;
+        }
+        .clay-btn:active {
+            box-shadow: inset 3px 3px 6px rgba(163,177,198,0.45), inset -3px -3px 6px rgba(255,255,255,0.9);
+        }
+
+        /* ========== THEME 2: STUDY (now Futuristic Dark / Bento) ========== */
+        body[data-theme="study"] { background-color: #0A0F1A; color: #E2E8F0; }
+        body[data-theme="study"] .sidebar { background: rgba(10, 15, 26, 0.97); border-right: 1px solid rgba(255,255,255,0.06); color: #94A3B8; }
+        body[data-theme="study"] .nav-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        body[data-theme="study"] .nav-link.active { background: rgba(0, 240, 255, 0.12); color: #00f0ff; }
+
+        .bento-card {
+            background: #111827;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 1.35rem;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 240, 255, 0.25);
+            box-shadow: 0 12px 28px -12px rgba(0, 240, 255, 0.18);
+        }
+        .bento-accent-cyan { color: #00f0ff; }
+        .bento-accent-purple { color: #b026ff; }
+        .bento-gradient-text {
+            background: linear-gradient(90deg, #00f0ff, #b026ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bento-glow {
+            position: absolute; width: 140px; height: 140px;
+            background: radial-gradient(circle, rgba(0,240,255,0.12) 0%, transparent 70%);
+            top: -40px; right: -40px; border-radius: 50%; pointer-events: none;
+        }
+
+        /* ========== THEME 3: PLANNER (Neumorphism) ========== */
+        body[data-theme="planner"] {
+            background-color: #E0E5EC;
+            color: #333;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(74,144,226,0.08) 0%, transparent 42%),
+                radial-gradient(circle at 85% 75%, rgba(99,102,241,0.06) 0%, transparent 38%),
+                radial-gradient(rgba(163,177,198,0.35) 1.2px, transparent 1.2px);
+            background-size: auto, auto, 22px 22px;
+            background-attachment: fixed;
+        }
+        body[data-theme="planner"] .sidebar { background: #E0E5EC; color: #666; border-right: none; }
+        body[data-theme="planner"] .nav-link.active {
+            background: #E0E5EC; color: #4A90E2;
+            box-shadow: 5px 5px 10px #b8bcc2, -5px -5px 10px #ffffff;
+        }
+        .neu-card {
+            background: #E0E5EC; border-radius: 18px; padding: 1.5rem;
+            box-shadow: 8px 8px 14px rgb(163,177,198,0.55), -8px -8px 14px rgba(255,255,255,0.55);
+        }
+        .neu-inset {
+            background: #E0E5EC; border-radius: 12px; padding: 1rem;
+            box-shadow: inset 5px 5px 9px 0 rgba(163,177,198,0.65), inset -5px -5px 9px 0 rgba(255,255,255,0.8);
+        }
+        .neu-task {
+            background: #E0E5EC; padding: 0.9rem 1rem; border-radius: 12px; margin-bottom: 0.7rem;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 4px 4px 8px rgb(163,177,198,0.4), -4px -4px 8px rgba(255,255,255,0.5);
+            cursor: pointer; transition: transform 0.15s;
+        }
+        .neu-task:hover { transform: scale(1.01); }
+        .neu-task.completed { opacity: 0.65; }
+        .neu-task.completed .task-title { text-decoration: line-through; }
+
+        /* ========== THEME 4: CREATIVE (Glassmorphism) ========== */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body[data-theme="creative"] {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a18cd1, #fbc2eb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #fff;
+        }
+        body[data-theme="creative"] .sidebar {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.85);
+        }
+        body[data-theme="creative"] .nav-link.active {
+            background: rgba(255,255,255,0.28); color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.16);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.28);
+            border-radius: 22px; padding: 1.35rem;
+            box-shadow: 0 8px 28px 0 rgba(31,38,135,0.14);
+            transition: transform 0.25s ease, background 0.25s ease;
+        }
+        .glass-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.26); }
+
+        /* ========== THEME 5: PROJECTS — Soft Dream Glass (ref image 1) ========== */
+        body[data-theme="projects"] {
+            background: linear-gradient(135deg, #c4b5fd 0%, #f0abfc 35%, #a5b4fc 70%, #ddd6fe 100%);
+            background-size: 200% 200%;
+            animation: dreamBG 18s ease infinite;
+            color: #1e1b4b;
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes dreamBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body[data-theme="projects"] .sidebar {
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(255,255,255,0.45);
+            color: #4c1d95;
+        }
+        body[data-theme="projects"] .nav-link:hover { background: rgba(255,255,255,0.4); color: #2e1065; }
+        body[data-theme="projects"] .nav-link.active {
+            background: rgba(255,255,255,0.55); color: #5b21b6;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .proj-glass {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+        .proj-glass:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.22), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .proj-btn {
+            background: linear-gradient(135deg, #a78bfa, #e879f9);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(167, 139, 250, 0.4);
+            transition: all 0.2s;
+        }
+        .proj-btn:hover { transform: scale(1.03); box-shadow: 0 8px 28px rgba(167, 139, 250, 0.5); }
+        .proj-btn.muted {
+            background: rgba(255,255,255,0.5);
+            color: #6b21a8;
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        .proj-btn.muted:hover { background: rgba(255,255,255,0.7); }
+
+        /* ========== THEME 6: PROGRESS / ANALYSIS — Geometric Bauhaus (ref image 2) ========== */
+        body[data-theme="progress"] {
+            background-color: #e8eef5;
+            color: #0a0a0a;
+        }
+        body[data-theme="progress"] .sidebar {
+            background: #0a0a0a;
+            border-right: none;
+            color: #a3a3a3;
+        }
+        body[data-theme="progress"] .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+        body[data-theme="progress"] .nav-link.active {
+            background: #fff; color: #0a0a0a; font-weight: 700;
+            border-radius: 999px;
+        }
+        .progress-shell {
+            background: #0a0a0a;
+            border-radius: 28px;
+            padding: 2rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+        .geo-shapes {
+            position: absolute; right: -20px; top: -20px; width: 55%; height: 120%;
+            pointer-events: none; opacity: 0.95;
+        }
+        .progress-card {
+            background: #0a0a0a;
+            border: none;
+            border-radius: 20px;
+            padding: 1.4rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-card.light {
+            background: #fff;
+            color: #0a0a0a;
+            border: 2px solid #0a0a0a;
+        }
+        .geo-dot {
+            display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+        }
+        .geo-pill {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: #fff; color: #0a0a0a; padding: 0.45rem 1rem;
+            border-radius: 999px; font-weight: 600; font-size: 0.8rem;
+            border: none; cursor: pointer;
+        }
+
+        /* Settings modal — Dark Bento AI (ref image 3) */
+        #settings-modal .modal-box {
+            background: #0b0f1a !important;
+            border: 1px solid rgba(139, 92, 246, 0.25) !important;
+            border-radius: 24px !important;
+            max-width: 520px !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(139, 92, 246, 0.12);
+        }
+        .bento-settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .bento-tile {
+            background: #121826;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 1rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .bento-tile:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+        }
+        .bento-tile.wide { grid-column: 1 / -1; }
+        .bento-tile.accent {
+            background: linear-gradient(145deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%);
+            border: none;
+        }
+        .bento-orb-mini {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #e0f2fe, #22d3ee, #7c3aed);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+            margin: 0 auto 0.75rem;
+        }
+
+        /* ========== ANIMATED GLOWING ORB CHATBOT ========== */
+        .chatbot-btn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 100;
+            width: 64px; height: 64px; border-radius: 50%;
+            border: none; cursor: pointer; padding: 0;
+            background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s ease;
+        }
+        .chatbot-btn:hover { transform: scale(1.12); }
+        .orb-core {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%,
+                #e0f2fe 0%, #67e8f9 15%, #22d3ee 35%,
+                #a78bfa 55%, #7c3aed 75%, #1e1b4b 100%);
+            box-shadow:
+                0 0 12px 4px rgba(34, 211, 238, 0.5),
+                0 0 28px 8px rgba(167, 139, 250, 0.35),
+                0 0 48px 14px rgba(124, 58, 237, 0.2),
+                inset 0 0 20px rgba(255,255,255,0.25);
+            animation: orbPulse 3s ease-in-out infinite, orbRotate 12s linear infinite;
+            position: relative;
+        }
+        .orb-core::before {
+            content: '';
+            position: absolute; inset: -6px; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent, rgba(34,211,238,0.4), transparent, rgba(167,139,250,0.4), transparent);
+            animation: orbSpin 4s linear infinite;
+            z-index: -1;
+            filter: blur(4px);
+        }
+        .orb-core::after {
+            content: '';
+            position: absolute; inset: 8px; border-radius: 50%;
+            background: radial-gradient(circle at 40% 30%, rgba(255,255,255,0.5) 0%, transparent 55%);
+            pointer-events: none;
+        }
+        @keyframes orbPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 12px 4px rgba(34,211,238,0.5), 0 0 28px 8px rgba(167,139,250,0.35), 0 0 48px 14px rgba(124,58,237,0.2); }
+            50% { transform: scale(1.06); box-shadow: 0 0 18px 6px rgba(34,211,238,0.65), 0 0 36px 12px rgba(167,139,250,0.45), 0 0 60px 18px rgba(124,58,237,0.3); }
+        }
+        @keyframes orbRotate {
+            from { filter: hue-rotate(0deg); }
+            to { filter: hue-rotate(20deg); }
+        }
+        @keyframes orbSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .chatbot-panel {
+            position: fixed; bottom: 100px; right: 24px; z-index: 100;
+            width: 360px; max-height: 480px; background: #0f172a;
+            border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(34,211,238,0.1);
+            display: none; flex-direction: column;
+            overflow: hidden;
+        }
+        .chatbot-panel.open { display: flex; animation: panelSlide 0.3s ease; }
+        @keyframes panelSlide {
+            from { opacity: 0; transform: translateY(12px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ========== HOME PAGE ANIMATIONS ========== */
+        .anim-fade-up {
+            opacity: 0;
+            transform: translateY(22px);
+            animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .anim-delay-1 { animation-delay: 0.1s; }
+        .anim-delay-2 { animation-delay: 0.2s; }
+        .anim-delay-3 { animation-delay: 0.3s; }
+        .anim-delay-4 { animation-delay: 0.4s; }
+        .anim-delay-5 { animation-delay: 0.5s; }
+        .anim-delay-6 { animation-delay: 0.6s; }
+        .anim-delay-7 { animation-delay: 0.7s; }
+        .clay-card, .bento-card {
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+        body[data-theme="home"] .clay-card:hover {
+            transform: scale(1.025) translateY(-4px);
+        }
+        body[data-theme="study"] .bento-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 36px -12px rgba(0, 240, 255, 0.25);
+        }
+
+        /* Small orbiting dots — incomplete tasks (slow) */
+        .task-ring {
+            width: 18px; height: 18px; position: relative; flex-shrink: 0;
+            animation: spinDots 2.8s linear infinite;
+        }
+        .task-ring::before,
+        .task-ring::after {
+            content: '';
+            position: absolute;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: #3b82f6;
+            top: 50%; left: 50%;
+        }
+        .task-ring::before {
+            transform: translate(-50%, -50%) translateY(-7px);
+            box-shadow: 0 14px 0 #3b82f6;
+            opacity: 0.95;
+        }
+        .task-ring::after {
+            width: 3px; height: 3px;
+            transform: translate(-50%, -50%) translateX(7px);
+            box-shadow: -14px 0 0 #60a5fa;
+            opacity: 0.7;
+        }
+        .task-ring.cyan::before { background: #22d3ee; box-shadow: 0 14px 0 #22d3ee; }
+        .task-ring.cyan::after { background: #67e8f9; box-shadow: -14px 0 0 #67e8f9; }
+        .task-ring.purple::before { background: #a78bfa; box-shadow: 0 14px 0 #a78bfa; }
+        .task-ring.purple::after { background: #c4b5fd; box-shadow: -14px 0 0 #c4b5fd; }
+        .task-ring.yellow::before { background: #fbbf24; box-shadow: 0 14px 0 #fbbf24; }
+        .task-ring.yellow::after { background: #fcd34d; box-shadow: -14px 0 0 #fcd34d; }
+        .task-ring.pink::before { background: #f472b6; box-shadow: 0 14px 0 #f472b6; }
+        .task-ring.pink::after { background: #f9a8d4; box-shadow: -14px 0 0 #f9a8d4; }
+        @keyframes spinDots { to { transform: rotate(360deg); } }
+
+        .neu-task.completed .task-ring,
+        .task-item.done .task-ring { display: none; }
+        .neu-task.completed .task-check-done,
+        .task-item.done .task-check-done { display: inline-flex !important; }
+        .task-check-done { display: none; color: #22c55e; font-size: 1.15rem; align-items: center; }
+
+        @keyframes softPulse {
+            0%, 100% { box-shadow: inset 2px 2px 5px rgba(163,177,198,0.35), inset -2px -2px 5px rgba(255,255,255,0.85); }
+            50% { box-shadow: inset 2px 2px 5px rgba(163,177,198,0.35), inset -2px -2px 5px rgba(255,255,255,0.85), 0 0 0 5px rgba(59,130,246,0.07); }
+        }
+        .priority-pending { animation: softPulse 2.4s ease-in-out infinite; }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+            display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;
+        }
+        .toast {
+            background: #1e293b; border-left: 4px solid #22d3ee; color: #e2e8f0;
+            padding: 0.85rem 1.1rem; border-radius: 0.65rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            animation: toastIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
+            display: flex; align-items: center; gap: 0.65rem; font-size: 0.875rem;
+            pointer-events: auto; max-width: 320px;
+        }
+        @keyframes toastIn {
+            from { transform: translateX(110%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .chat-header {
+            padding: 1rem 1.2rem; background: linear-gradient(90deg, #0ea5e9, #8b5cf6);
+            color: white; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
+        .chat-msg { max-width: 85%; padding: 0.7rem 1rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; }
+        .chat-msg.bot { background: #1e293b; color: #e2e8f0; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-msg.user { background: #0ea5e9; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-input-area {
+            padding: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; gap: 0.5rem;
+        }
+        .chat-input-area input {
+            flex: 1; background: #1e293b; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 0.6rem 1rem; color: white; outline: none;
+        }
+        .chat-input-area button {
+            background: #0ea5e9; border: none; border-radius: 12px; width: 42px;
+            color: white; cursor: pointer;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 90;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #111827; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; width: 90%; max-width: 480px; padding: 1.75rem;
+            max-height: 85vh; overflow-y: auto;
+        }
+
+        /* ========== SMOOTH SCROLL & GLOBAL ========== */
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: contain;
+        }
+        .main-content {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        /* ========== RESPONSIVE: Phone / Tablet / Laptop ========== */
+
+        /* --- Large phones & small tablets (portrait) --- */
+        @media (max-width: 640px) {
+            :root { --sidebar-width: 0px; }
+            .app-container { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: 64px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.3rem 0.15rem;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                border-right: none;
+                border-top: 1px solid rgba(128,128,128,0.2);
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+                gap: 0;
+            }
+            .sidebar .logo-area { display: none !important; }
+            .sidebar .nav-extra {
+                display: flex !important;
+                flex-direction: row !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                gap: 0;
+            }
+            .nav-links {
+                flex-direction: row !important;
+                width: auto;
+                flex: 1;
+                justify-content: space-around;
+                align-items: center;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .sidebar {
+                overflow-x: auto;
+                justify-content: flex-start;
+                gap: 0;
+            }
+            .nav-link {
+                flex-direction: column;
+                gap: 0.1rem;
+                font-size: 0.55rem;
+                padding: 0.3rem 0.25rem;
+                margin: 0;
+                border-radius: 10px;
+                min-width: 42px;
+                min-height: 48px;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            .nav-link span { display: none; }
+            .nav-link i { font-size: 1.1rem; width: auto; }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 1rem 0.85rem 88px;
+                width: 100%;
+            }
+            .page { max-width: 100% !important; }
+            .modal-box { width: 94%; max-width: 94%; padding: 1.25rem; margin: 0.5rem; }
+            body[data-theme="projects"] .sidebar { border-top: 1px solid rgba(255,255,255,0.1); border-right: none; }
+            /* Stack grids tighter on phone */
+            .grid { gap: 0.85rem !important; }
+            h1 { font-size: 1.45rem !important; }
+            h2 { font-size: 1.15rem !important; }
+        }
+
+        /* --- Tablets (portrait + landscape) --- */
+        @media (min-width: 641px) and (max-width: 1024px) {
+            :root { --sidebar-width: 72px; }
+            .sidebar {
+                width: 72px;
+                padding: 1.25rem 0.5rem;
+                align-items: center;
+            }
+            .sidebar .logo-area {
+                font-size: 0.7rem;
+                padding: 0 !important;
+                margin-bottom: 1.5rem !important;
+                flex-direction: column;
+                gap: 0.25rem;
+                text-align: center;
+            }
+            .sidebar .logo-area span,
+            .nav-link span { display: none; }
+            .nav-link {
+                justify-content: center;
+                padding: 0.85rem 0.4rem;
+                border-radius: 14px;
+            }
+            .nav-link i { font-size: 1.25rem; width: auto; }
+            .nav-extra { width: 100%; }
+            .nav-extra .nav-link { justify-content: center; }
+            .main-content {
+                margin-left: 72px;
+                padding: 1.5rem 1.25rem;
+            }
+            
+        }
+
+        /* --- Laptop / Desktop --- */
+        @media (min-width: 1025px) {
+            :root { --sidebar-width: 260px; }
+            .nav-link span { display: inline; }
+            .sidebar .logo-area { display: flex; }
+            .main-content { margin-left: 260px; padding: 1.75rem 2rem; }
+        }
+
+        /* --- Very large screens --- */
+        @media (min-width: 1400px) {
+            .main-content { padding: 2rem 2.5rem; }
+            .page { max-width: 1280px; }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding: max(0px)) {
+            @media (max-width: 640px) {
+                .sidebar {
+                    padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
+                    height: calc(64px + env(safe-area-inset-bottom));
+                }
+                .main-content {
+                    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+                }
+            }
+        }
+
+        /* Utilities */
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .stage-badge { font-size: 0.7rem; padding: 0.2rem 0.55rem; border-radius: 6px; font-weight: 600; }
+        .scroll-thin::-webkit-scrollbar { width: 5px; }
+        .scroll-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    
+
+/* ========== ENHANCED ANIMATIONS & UI POLISH ========== */
+
+:root {
+    --trans-dur: 0.45s;
+    --sidebar-width: 260px;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Smoother global transitions */
+body {
+    transition: background-color 0.55s var(--ease-smooth), color 0.45s ease, font-family 0.3s ease;
+}
+
+.sidebar {
+    transition: background 0.5s var(--ease-smooth), border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.nav-link {
+    transition: all 0.28s var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+}
+.nav-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+    pointer-events: none;
+}
+.nav-link:hover::after { opacity: 0.06; }
+.nav-link:active { transform: scale(0.97); }
+
+/* ========== BETTER PAGE TRANSITIONS ========== */
+.page {
+    display: none;
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    transition: opacity 0.38s var(--ease-out-expo), transform 0.42s var(--ease-out-expo);
+    will-change: opacity, transform;
+}
+.page.active-page { display: block; }
+.page.fade-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* ========== ENHANCED ENTRANCE ANIMATIONS ========== */
+.anim-fade-up {
+    opacity: 0;
+    transform: translateY(28px);
+    animation: fadeUp 0.7s var(--ease-out-expo) forwards;
+}
+@keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+.anim-delay-1 { animation-delay: 0.08s; }
+.anim-delay-2 { animation-delay: 0.16s; }
+.anim-delay-3 { animation-delay: 0.24s; }
+.anim-delay-4 { animation-delay: 0.32s; }
+.anim-delay-5 { animation-delay: 0.4s; }
+.anim-delay-6 { animation-delay: 0.48s; }
+.anim-delay-7 { animation-delay: 0.56s; }
+
+/* Stagger children utility */
+.stagger-children > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.55s var(--ease-out-expo) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.4s; }
+
+/* ========== CLAYMORPHISM ENHANCEMENTS ========== */
+.clay-card {
+    transition: transform 0.35s var(--ease-spring), box-shadow 0.35s ease;
+}
+body[data-theme="home"] .clay-card:hover {
+    transform: scale(1.022) translateY(-5px);
+    box-shadow: 14px 14px 28px rgba(163,177,198,0.5), -14px -14px 28px rgba(255,255,255,0.95),
+                inset 3px 3px 6px rgba(255,255,255,0.9), inset -3px -3px 6px rgba(163,177,198,0.3);
+}
+.clay-btn {
+    transition: all 0.2s var(--ease-smooth);
+}
+.clay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.95);
+}
+.clay-btn:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.9);
+}
+
+/* Priority items better feel */
+.priority-pending {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.priority-pending:hover {
+    transform: translateX(4px);
+}
+
+/* ========== BENTO / STUDY ENHANCEMENTS ========== */
+.bento-card {
+    transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s ease, border-color 0.35s ease;
+}
+body[data-theme="study"] .bento-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 20px 40px -14px rgba(0, 240, 255, 0.28);
+}
+.bento-glow {
+    transition: opacity 0.4s ease, transform 0.5s ease;
+}
+.bento-card:hover .bento-glow {
+    opacity: 1.4;
+    transform: scale(1.15);
+}
+
+/* ========== NEUMORPHISM ENHANCEMENTS ========== */
+.neu-card {
+    transition: transform 0.3s var(--ease-smooth), box-shadow 0.3s ease;
+}
+.neu-card:hover {
+    transform: translateY(-3px);
+}
+.neu-task {
+    transition: transform 0.22s var(--ease-smooth), opacity 0.25s ease, box-shadow 0.25s ease;
+}
+.neu-task:hover {
+    transform: scale(1.018) translateX(3px);
+}
+.neu-task:active {
+    transform: scale(0.985);
+}
+.neu-task.completed {
+    transition: opacity 0.4s ease, transform 0.35s ease;
+}
+
+/* ========== GLASSMORPHISM ENHANCEMENTS ========== */
+.glass-card {
+    transition: transform 0.4s var(--ease-out-expo), background 0.35s ease, box-shadow 0.4s ease;
+}
+.glass-card:hover {
+    transform: translateY(-8px) scale(1.015);
+    background: rgba(255,255,255,0.28);
+    box-shadow: 0 16px 40px 0 rgba(31,38,135,0.22);
+}
+
+/* ========== PROJECTS GLASS ENHANCEMENTS ========== */
+.proj-glass {
+    transition: transform 0.45s var(--ease-out-expo), box-shadow 0.45s ease;
+}
+.proj-glass:hover {
+    transform: translateY(-8px) scale(1.015);
+    box-shadow: 0 24px 55px rgba(139, 92, 246, 0.28), inset 0 1px 0 rgba(255,255,255,0.95);
+}
+.proj-btn {
+    transition: all 0.25s var(--ease-spring);
+}
+.proj-btn:hover {
+    transform: scale(1.05) translateY(-1px);
+}
+.proj-btn:active {
+    transform: scale(0.97);
+}
+
+/* ========== PROGRESS GEOMETRIC ENHANCEMENTS ========== */
+.progress-shell {
+    transition: transform 0.35s ease;
+}
+.geo-shapes {
+    animation: geoFloat 22s ease-in-out infinite;
+}
+@keyframes geoFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(-8px, 6px) rotate(1.5deg); }
+    66% { transform: translate(5px, -4px) rotate(-1deg); }
+}
+.progress-card {
+    transition: transform 0.3s var(--ease-smooth), box-shadow 0.3s ease;
+}
+.progress-card:hover {
+    transform: translateY(-4px);
+}
+.geo-pill {
+    transition: all 0.25s var(--ease-spring);
+}
+.geo-pill:hover {
+    transform: scale(1.06);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+/* ========== CHATBOT ORB — MORE LIVING ========== */
+.chatbot-btn {
+    transition: transform 0.3s var(--ease-spring);
+}
+.chatbot-btn:hover {
+    transform: scale(1.14);
+}
+.chatbot-btn:active {
+    transform: scale(0.95);
+}
+.orb-core {
+    animation: orbPulse 2.8s ease-in-out infinite, orbHue 10s linear infinite;
+}
+@keyframes orbHue {
+    0% { filter: hue-rotate(0deg); }
+    50% { filter: hue-rotate(25deg); }
+    100% { filter: hue-rotate(0deg); }
+}
+.orb-core::before {
+    animation: orbSpin 3.5s linear infinite;
+}
+.chatbot-panel {
+    transition: opacity 0.3s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
+}
+.chatbot-panel.open {
+    animation: panelSlide 0.38s var(--ease-out-expo);
+}
+@keyframes panelSlide {
+    from { opacity: 0; transform: translateY(16px) scale(0.94); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ========== TASK RING — SMOOTHER ========== */
+.task-ring {
+    animation: spinDots 2.4s linear infinite;
+}
+@keyframes spinDots {
+    to { transform: rotate(360deg); }
+}
+
+/* Soft pulse for pending priorities */
+@keyframes softPulse {
+    0%, 100% { box-shadow: inset 2px 2px 5px rgba(163,177,198,0.35), inset -2px -2px 5px rgba(255,255,255,0.85); }
+    50% { box-shadow: inset 2px 2px 5px rgba(163,177,198,0.35), inset -2px -2px 5px rgba(255,255,255,0.85), 0 0 0 6px rgba(59,130,246,0.08); }
+}
+
+/* ========== TOAST — IMPROVED ========== */
+.toast {
+    animation: toastIn 0.4s var(--ease-out-expo) forwards;
+}
+@keyframes toastIn {
+    from { transform: translateX(110%) scale(0.95); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* ========== MODAL ENTRANCE ========== */
+.modal-overlay {
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+    backdrop-filter: blur(0px);
+}
+.modal-overlay.open {
+    backdrop-filter: blur(6px);
+}
+.modal-box {
+    animation: modalPop 0.35s var(--ease-out-expo);
+}
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ========== BUTTON MICRO-INTERACTIONS ========== */
+button, .clay-btn, .proj-btn, .geo-pill {
+    -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible, .nav-link:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
+}
+
+/* Progress bars animate in */
+.clay-bar-fill, .bento-card .bg-gradient-to-r {
+    transition: width 0.9s var(--ease-out-expo);
+}
+
+/* Subtle shine on glass cards */
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+    border-radius: inherit;
+}
+.glass-card {
+    position: relative;
+    overflow: hidden;
+}
+.glass-card:hover::before {
+    left: 120%;
+}
+
+/* ========== REDUCED MOTION SUPPORT ========== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .page, .anim-fade-up, .stagger-children > * {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+
+
+/* =========================================================
+   VECTOPLAN — DELIGHT ANIMATIONS LAYER
+   ========================================================= */
+
+:root {
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ---------- PAGE TRANSITIONS (fluid) ---------- */
+.page {
+    display: none;
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+    filter: blur(4px);
+    transition:
+        opacity 0.38s var(--ease-out-expo),
+        transform 0.42s var(--ease-out-expo),
+        filter 0.35s ease;
+    will-change: opacity, transform, filter;
+}
+.page.active-page { display: block; }
+.page.fade-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+.page.fade-out {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    filter: blur(3px);
+}
+
+/* ---------- STAGGER ENTRANCE ---------- */
+.anim-fade-up {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    animation: delightFadeUp 0.65s var(--ease-out-expo) forwards;
+}
+@keyframes delightFadeUp {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.stagger-children > * {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: delightFadeUp 0.55s var(--ease-out-expo) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.16s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.22s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.28s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.34s; }
+
+/* ---------- BUTTON MICRO FEEDBACK ---------- */
+.clay-btn, .proj-btn, .geo-pill,
+button.px-3, button.px-3\.5, button.px-4,
+.chat-input-area button {
+    transition: transform 0.18s var(--ease-spring), box-shadow 0.25s ease, background 0.2s ease;
+}
+.clay-btn:active, .proj-btn:active, .geo-pill:active,
+button:active {
+    transform: scale(0.94) !important;
+}
+
+/* Nav link press */
+.nav-link {
+    transition: all 0.25s var(--ease-smooth), transform 0.15s var(--ease-spring);
+}
+.nav-link:active {
+    transform: scale(0.96);
+}
+
+/* ---------- TASK COMPLETE DELIGHT ---------- */
+.neu-task {
+    transition: transform 0.28s var(--ease-spring), opacity 0.35s ease, box-shadow 0.25s ease, max-height 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+.neu-task.just-completed {
+    animation: taskCompleteBounce 0.55s var(--ease-spring);
+}
+@keyframes taskCompleteBounce {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.04); }
+    55%  { transform: scale(0.97); }
+    100% { transform: scale(1); }
+}
+.task-check-done {
+    transition: transform 0.35s var(--ease-spring), opacity 0.25s ease;
+}
+.neu-task.completed .task-check-done {
+    animation: checkPop 0.45s var(--ease-spring);
+}
+@keyframes checkPop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.25); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Priority items hover delight */
+#home-priorities > li,
+.bento-card .flex.items-center.justify-between {
+    transition: transform 0.28s var(--ease-spring), box-shadow 0.25s ease;
+}
+#home-priorities > li:hover {
+    transform: translateX(6px) scale(1.01);
+}
+
+/* ---------- PROGRESS BAR FILL ---------- */
+.clay-bar-fill {
+    transform-origin: left center;
+    animation: barFill 1.1s var(--ease-out-expo) both;
+}
+@keyframes barFill {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+/* Study progress bars */
+.bento-card .bg-gradient-to-r {
+    transform-origin: left;
+    animation: barFill 1.2s var(--ease-out-expo) 0.15s both;
+}
+
+/* ---------- NUMBER COUNT-UP HELPER ---------- */
+.count-up {
+    display: inline-block;
+    transition: transform 0.3s var(--ease-spring);
+}
+
+/* ---------- CHATBOT ORB PERSONALITY ---------- */
+.chatbot-btn {
+    transition: transform 0.3s var(--ease-spring);
+}
+.chatbot-btn:hover { transform: scale(1.16); }
+.chatbot-btn:active { transform: scale(0.9); }
+
+.orb-core {
+    animation: orbBreathe 3.2s ease-in-out infinite, orbHueShift 14s linear infinite;
+}
+@keyframes orbBreathe {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow:
+            0 0 12px 4px rgba(34, 211, 238, 0.5),
+            0 0 28px 8px rgba(167, 139, 250, 0.35),
+            0 0 48px 14px rgba(124, 58, 237, 0.2),
+            inset 0 0 20px rgba(255,255,255,0.25);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow:
+            0 0 20px 7px rgba(34, 211, 238, 0.7),
+            0 0 40px 14px rgba(167, 139, 250, 0.5),
+            0 0 70px 22px rgba(124, 58, 237, 0.35),
+            inset 0 0 24px rgba(255,255,255,0.35);
+    }
+}
+@keyframes orbHueShift {
+    0%   { filter: hue-rotate(0deg); }
+    50%  { filter: hue-rotate(28deg); }
+    100% { filter: hue-rotate(0deg); }
+}
+.orb-core.pulse-once {
+    animation: orbClickPulse 0.5s var(--ease-spring);
+}
+@keyframes orbClickPulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.82); }
+    70%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* Chat panel */
+.chatbot-panel.open {
+    animation: panelDelight 0.4s var(--ease-out-expo);
+}
+@keyframes panelDelight {
+    from { opacity: 0; transform: translateY(20px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- MODAL DELIGHT ---------- */
+.modal-overlay {
+    transition: opacity 0.3s ease, backdrop-filter 0.35s ease;
+    backdrop-filter: blur(0);
+}
+.modal-overlay.open {
+    backdrop-filter: blur(8px);
+}
+.modal-box {
+    animation: modalDelight 0.4s var(--ease-out-expo);
+}
+@keyframes modalDelight {
+    from { opacity: 0; transform: scale(0.9) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ---------- TOAST DELIGHT ---------- */
+.toast {
+    animation: toastDelight 0.45s var(--ease-out-expo) forwards;
+}
+@keyframes toastDelight {
+    from { transform: translateX(120%) scale(0.9); opacity: 0; }
+    60%  { transform: translateX(-6px) scale(1.02); }
+    to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* ---------- CARD HOVER DELIGHTS ---------- */
+body[data-theme="home"] .clay-card {
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s ease;
+}
+body[data-theme="home"] .clay-card:hover {
+    transform: scale(1.025) translateY(-6px);
+}
+body[data-theme="study"] .bento-card {
+    transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s ease, border-color 0.3s ease;
+}
+body[data-theme="study"] .bento-card:hover {
+    transform: translateY(-8px);
+}
+.glass-card {
+    transition: transform 0.4s var(--ease-out-expo), background 0.35s ease, box-shadow 0.4s ease;
+}
+.glass-card:hover {
+    transform: translateY(-9px) scale(1.02);
+}
+.proj-glass {
+    transition: transform 0.45s var(--ease-out-expo), box-shadow 0.45s ease;
+}
+.proj-glass:hover {
+    transform: translateY(-9px) scale(1.02);
+}
+.progress-card {
+    transition: transform 0.35s var(--ease-spring), box-shadow 0.3s ease;
+}
+.progress-card:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+/* ---------- CONFETTI CANVAS ---------- */
+#confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+}
+
+/* ---------- SUCCESS RING (optional visual) ---------- */
+.success-ring {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid #22c55e;
+    opacity: 0;
+    pointer-events: none;
+}
+.success-ring.animate {
+    animation: successRing 0.6s var(--ease-out-expo) forwards;
+}
+@keyframes successRing {
+    0%   { transform: scale(0.4); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ---------- REDUCED MOTION ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .page, .anim-fade-up, .stagger-children > *,
+    .clay-bar-fill, .bento-card .bg-gradient-to-r,
+    .orb-core, .neu-task.just-completed,
+    .modal-box, .toast, .chatbot-panel.open {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+}
+
+</style>
+</head>
+<body data-theme="home">
+<div id="toast-container"></div>
+
+<div class="app-container">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo-area mb-6 px-3 font-bold text-xl tracking-wider uppercase flex items-center gap-2.5 transition-transform duration-300 hover:scale-[1.03]">
+            <i class="fa-solid fa-layer-group"></i> VectoPlan
+        </div>
+        <div class="nav-links flex flex-col w-full flex-1">
+            <a class="nav-link active" data-target="home"><i class="fa-solid fa-house"></i> <span>Home</span></a>
+            <a class="nav-link" data-target="study"><i class="fa-solid fa-book-open"></i> <span>Study</span></a>
+            <a class="nav-link" data-target="planner"><i class="fa-solid fa-calendar-days"></i> <span>Planner</span></a>
+            <a class="nav-link" data-target="creative"><i class="fa-solid fa-palette"></i> <span>Creative</span></a>
+            <a class="nav-link" data-target="projects"><i class="fa-solid fa-terminal"></i> <span>Projects</span></a>
+            <a class="nav-link" data-target="progress"><i class="fa-solid fa-chart-line"></i> <span>Progress</span></a>
+        </div>
+        <div class="nav-extra mt-auto pt-4 border-t border-white/10 space-y-1">
+            <a class="nav-link" onclick="openSettings()"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
+            <a class="nav-link" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i> <span>Search</span></a>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+        <!-- ===================== HOME (Claymorphism style) ===================== -->
+        <section id="home" class="page active-page w-full max-w-7xl mx-auto">
+            <header class="mb-6 flex flex-wrap items-center justify-between gap-3 anim-fade-up">
+                <div>
+                    <h1 id="home-greeting" class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-700 mb-1 tracking-tight leading-tight">Good morning, Commander</h1>
+                    <p id="home-date" class="text-gray-500 text-sm md:text-base mt-1">Thursday, 29 Oct 2026</p>
+                    <p class="text-gray-400 text-xs mt-0.5">Today's Command Centre</p>
+                </div>
+                <button onclick="openQuickAdd()" class="clay-btn text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Quick Add
+                </button>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- LEFT + CENTER -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Top Priorities -->
+                    <div class="clay-card anim-fade-up anim-delay-1">
+                        <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-blue-500"></i> Top Priorities
+                        </h2>
+                        <ul class="space-y-3" id="home-priorities">
+                            <li class="text-center py-8 text-gray-400 text-sm" id="priorities-empty">
+                                <i class="fa-solid fa-inbox text-2xl mb-2 block opacity-50"></i>
+                                No priorities yet. Use Quick Add to add tasks.
+                            </li>
+                        </ul>
+                        <div class="mt-4 pt-3 border-t border-gray-300/60 flex justify-between items-center">
+                            <span class="text-xs text-gray-500" id="tasks-today-count">0 tasks today</span>
+                            <button class="clay-btn text-xs py-1.5 px-3" onclick="openFocusTimer('Focus Session')">Start Focus Session</button>
+                        </div>
+                    </div>
+
+                    <!-- Today's Schedule Snapshot -->
+                    <div class="clay-card anim-fade-up anim-delay-2">
+                        <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-clock text-blue-500"></i> Today's Schedule</h3>
+                        <div class="space-y-2 text-sm" id="home-schedule">
+                            <p class="text-center py-6 text-gray-400 text-sm">No schedule items yet. Add from Planner.</p>
+                        </div>
+                    </div>
+
+                    <!-- Active Project -->
+                    <div class="clay-card anim-fade-up anim-delay-3">
+                        <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-microchip text-blue-500"></i> Active Project</h3>
+                        <p class="text-sm text-gray-400 text-center py-4" id="home-active-project">No active project. Add one from Projects.</p>
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL -->
+                <div class="lg:col-span-4 space-y-6">
+                    <!-- Smart Suggestion -->
+                    <div class="clay-card anim-fade-up anim-delay-2">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i>
+                            <h3 class="font-bold text-gray-700 text-sm">Smart Suggestion</h3>
+                        </div>
+                        <p class="text-sm text-gray-400 text-center py-3">Suggestions will appear once you have tasks & chapters.</p>
+                    </div>
+
+                    <!-- Weekly Goal -->
+                    <div class="clay-card flex flex-col items-center text-center py-5 anim-fade-up anim-delay-3">
+                        <div class="text-4xl font-bold text-blue-500 mb-1" id="weekly-goal-pct">0%</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-widest">Weekly Goal</div>
+                        <div class="w-full clay-bar-bg mt-3">
+                            <div class="clay-bar-fill" id="weekly-goal-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Urgent Deadline -->
+                    <div class="clay-card anim-fade-up anim-delay-4">
+                        <h3 class="font-bold text-red-500 mb-2 flex items-center gap-2 text-sm"><i class="fa-regular fa-clock"></i> Urgent Deadline</h3>
+                        <p class="text-sm text-gray-400 text-center py-3">No upcoming deadlines</p>
+                    </div>
+
+                    <!-- Upcoming -->
+                    <div class="clay-card anim-fade-up anim-delay-5">
+                        <h3 class="font-bold text-gray-700 mb-3 text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-week text-blue-500"></i> Upcoming</h3>
+                        <div class="space-y-2.5 text-xs text-gray-400 text-center py-2" id="home-upcoming">
+                            Nothing scheduled
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== STUDY (Futuristic Dark / Bento style) ===================== -->
+                <section id="study" class="page w-full max-w-6xl mx-auto">
+            <header class="mb-8 text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Academic Control Room</h1>
+                <p class="text-gray-400 mt-1.5">Subjects · Chapters · Stages · Backlog</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="study-subjects">
+                <div class="bento-card flex flex-col items-center justify-center min-h-[220px] text-center border-dashed border-2 border-gray-700/60">
+                    <div class="w-12 h-12 rounded-full bg-cyan-500/15 flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-plus text-cyan-400 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm">Add Subject</h3>
+                    <p class="text-xs text-gray-500 mt-1">Physics, Math, Chemistry…</p>
+                </div>
+            </div>
+
+            <div class="bento-card">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check bento-accent-cyan"></i> Backlog & Recommended Next Actions</h3>
+                <div class="space-y-3" id="study-backlog">
+                    <p class="text-center py-8 text-gray-500 text-sm">No backlog items. Add chapters and tasks to see recommendations.</p>
+                </div>
+            </div>
+        </section>
+
+<!-- ===================== PLANNER ===================== -->
+                <section id="planner" class="page w-full max-w-5xl mx-auto">
+            <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-700">Daily Timeline</h1>
+                    <p class="text-gray-500 text-sm mt-0.5" id="planner-date-label">Today · Add your schedule</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="neu-card px-3 py-2 text-sm font-medium text-gray-600">Day</button>
+                    <button class="neu-card px-3 py-2 text-sm font-medium text-gray-400">Week</button>
+                </div>
+            </header>
+
+            <div class="neu-card mb-6">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-lg font-semibold text-gray-600">Schedule</h2>
+                    <button onclick="openQuickAdd()" class="w-9 h-9 rounded-full flex items-center justify-center text-blue-500 shadow-[4px_4px_8px_rgb(163,177,198,0.5),-4px_-4px_8px_rgba(255,255,255,0.5)]">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div class="neu-inset space-y-3" id="planner-tasks">
+                    <p class="text-center py-10 text-gray-400 text-sm">No tasks scheduled. Tap + to add.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="neu-card flex flex-col items-center py-5 text-center cursor-pointer hover:scale-[1.02] transition-transform">
+                    <i class="fa-solid fa-list-check text-2xl text-gray-400 mb-2"></i>
+                    <h3 class="font-semibold text-gray-600 text-sm">Review Backlog</h3>
+                    <p class="text-xs text-gray-400 mt-1">0 items waiting</p>
+                </div>
+                <div class="neu-card flex flex-col items-center py-5 text-center cursor-pointer hover:scale-[1.02] transition-transform">
+                    <i class="fa-solid fa-chart-pie text-2xl text-gray-400 mb-2"></i>
+                    <h3 class="font-semibold text-gray-600 text-sm">Weekly Analytics</h3>
+                    <p class="text-xs text-gray-400 mt-1">Planned vs Done</p>
+                </div>
+            </div>
+        </section>
+
+<!-- ===================== CREATIVE ===================== -->
+                <section id="creative" class="page w-full max-w-6xl mx-auto">
+            <header class="mb-8 text-center">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-md">Creative Studio</h1>
+                <p class="text-white/80 mt-1.5">Acrylic · Sketching · Portfolio · Ideas</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="creative-gallery">
+                <div class="glass-card flex flex-col items-center justify-center min-h-[280px] cursor-pointer hover:bg-white/20 border-dashed border-2 border-white/30">
+                    <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-plus text-xl"></i>
+                    </div>
+                    <h3 class="font-bold">New Artwork</h3>
+                    <p class="text-xs text-white/60 mt-1">Add title, medium, notes</p>
+                </div>
+            </div>
+        </section>
+
+<!-- ===================== PROJECTS — Soft Dream Glass ===================== -->
+                <section id="projects" class="page w-full max-w-5xl mx-auto">
+            <header class="mb-8 text-center md:text-left">
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight" style="color:#2e1065">Project Lab</h1>
+                <p class="mt-1.5 text-sm" style="color:#6b21a8">Soft glass workspace</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="projects-list">
+                <div class="proj-glass flex flex-col items-center justify-center min-h-[260px] border-dashed border-2" style="border-color:rgba(139,92,246,0.35); background:rgba(255,255,255,0.25);">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3" style="background:rgba(167,139,250,0.3);">
+                        <i class="fa-solid fa-plus text-xl" style="color:#5b21b6"></i>
+                    </div>
+                    <h3 class="font-bold" style="color:#2e1065">New Project</h3>
+                    <p class="text-xs mt-1" style="color:#6b21a8">Add name, goals, milestones</p>
+                </div>
+            </div>
+        </section>
+
+<!-- ===================== PROGRESS / ANALYSIS — Geometric Bauhaus ===================== -->
+                <section id="progress" class="page w-full max-w-6xl mx-auto">
+            <div class="progress-shell mb-6">
+                <svg class="geo-shapes" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="280" cy="80" r="70" fill="#3b82f6"/>
+                    <circle cx="340" cy="160" r="55" fill="#22c55e"/>
+                    <circle cx="250" cy="200" r="45" fill="#60a5fa"/>
+                    <path d="M180 0 H320 A140 140 0 0 1 180 280 Z" fill="#1d4ed8"/>
+                    <circle cx="200" cy="300" r="40" fill="#86efac"/>
+                    <circle cx="320" cy="280" r="35" fill="#93c5fd"/>
+                    <path d="M360 200 A80 80 0 0 1 360 360 H280 Z" fill="#166534"/>
+                    <circle cx="150" cy="120" r="28" fill="#bfdbfe"/>
+                </svg>
+                <div class="relative z-10 max-w-md">
+                    <p class="text-xs uppercase tracking-widest text-neutral-400 mb-2">Analysis</p>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white leading-tight mb-3">Your Progress</h1>
+                    <p class="text-sm text-neutral-400 mb-6 leading-relaxed">Actual recorded data only. Planned vs done, syllabus depth, and weekly review — no fake percentages.</p>
+                    <button class="geo-pill" onclick="document.getElementById('review-notes').focus()">Write review →</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                <div class="progress-card text-center">
+                    <div class="flex justify-center gap-1 mb-2"><span class="geo-dot" style="background:#3b82f6"></span><span class="geo-dot" style="background:#22c55e"></span></div>
+                    <div class="text-3xl font-bold" id="stat-tasks-done">0</div>
+                    <div class="text-xs text-neutral-400 mt-1 uppercase tracking-wide">Tasks Done</div>
+                </div>
+                <div class="progress-card text-center">
+                    <div class="flex justify-center gap-1 mb-2"><span class="geo-dot" style="background:#60a5fa"></span></div>
+                    <div class="text-3xl font-bold" id="stat-study-pct">0%</div>
+                    <div class="text-xs text-neutral-400 mt-1 uppercase tracking-wide">Study</div>
+                </div>
+                <div class="progress-card light text-center">
+                    <div class="flex justify-center gap-1 mb-2"><span class="geo-dot" style="background:#a855f7"></span></div>
+                    <div class="text-3xl font-bold" id="stat-artworks">0</div>
+                    <div class="text-xs text-neutral-500 mt-1 uppercase tracking-wide">Artworks</div>
+                </div>
+                <div class="progress-card light text-center">
+                    <div class="flex justify-center gap-1 mb-2"><span class="geo-dot" style="background:#f59e0b"></span></div>
+                    <div class="text-3xl font-bold" id="stat-projects">0%</div>
+                    <div class="text-xs text-neutral-500 mt-1 uppercase tracking-wide">Projects</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="progress-card">
+                    <h3 class="font-bold mb-4 flex items-center gap-2"><span class="geo-dot" style="background:#3b82f6"></span> Study Snapshot</h3>
+                    <div class="space-y-3 text-sm text-neutral-400">
+                        <p class="text-center py-6">No study data yet. Start logging chapters & practice.</p>
+                    </div>
+                </div>
+                <div class="progress-card light">
+                    <h3 class="font-bold mb-4 flex items-center gap-2"><span class="geo-dot" style="background:#22c55e"></span> Weekly Review</h3>
+                    <textarea id="review-notes" class="w-full bg-neutral-100 border-2 border-black rounded-xl p-3 text-sm text-black h-28 resize-none outline-none focus:ring-2 focus:ring-blue-500" placeholder="What went well? What was hard? Next week?"></textarea>
+                    <button onclick="saveReview()" class="geo-pill mt-3">Save Review</button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- SETTINGS MODAL — Dark Bento AI -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal-box">
+        <div class="flex justify-between items-center mb-5">
+            <div>
+                <p class="text-xs text-violet-400 font-medium tracking-wide uppercase mb-0.5">VectoPlan Control</p>
+                <h2 class="text-xl font-bold text-white">Settings</h2>
+            </div>
+            <button onclick="closeSettings()" class="w-9 h-9 rounded-full bg-white/5 text-gray-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="bento-settings-grid mb-4">
+            <div class="bento-tile accent text-center text-white">
+                <div class="bento-orb-mini"></div>
+                <p class="font-bold text-sm">AI Companion</p>
+                <p class="text-xs opacity-80 mt-1">Local · On-device</p>
+            </div>
+            <div class="bento-tile text-center">
+                <div class="text-2xl font-bold text-violet-300 mb-1">6</div>
+                <p class="text-xs text-slate-400">Active modules</p>
+            </div>
+            <div class="bento-tile wide">
+                <label class="text-xs text-slate-400 block mb-1.5">Default page on load</label>
+                <select id="default-theme" class="w-full bg-[#0b0f1a] border border-white/10 rounded-xl px-3 py-2.5 text-white outline-none text-sm">
+                    <option value="home">Home</option>
+                    <option value="study">Study</option>
+                    <option value="planner">Planner</option>
+                    <option value="creative">Creative</option>
+                    <option value="projects">Projects (Glass)</option>
+                    <option value="progress">Analysis (Geometric)</option>
+                </select>
+            </div>
+            <div class="bento-tile">
+                <label class="text-xs text-slate-400 block mb-1.5">Week starts</label>
+                <select class="w-full bg-[#0b0f1a] border border-white/10 rounded-xl px-3 py-2 text-white outline-none text-sm">
+                    <option>Monday</option>
+                    <option>Sunday</option>
+                </select>
+            </div>
+            <div class="bento-tile flex items-center justify-between">
+                <span class="text-sm text-slate-300">Reduced motion</span>
+                <input type="checkbox" class="w-4 h-4 accent-violet-500">
+            </div>
+            <div class="bento-tile wide">
+                <p class="text-xs text-slate-400 mb-2">Data & backup</p>
+                <div class="flex gap-2">
+                    <button onclick="exportData()" class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30">Export JSON</button>
+                    <button class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10">Import</button>
+                </div>
+            </div>
+        </div>
+        <p class="text-[11px] text-slate-500 text-center">Private by default · Browser local storage</p>
+    </div>
+</div>
+
+<!-- QUICK ADD MODAL -->
+<div class="modal-overlay" id="quickadd-modal">
+    <div class="modal-box">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-xl font-bold text-white">Quick Add</h2>
+            <button onclick="closeQuickAdd()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-3 text-sm">
+            <input type="text" id="qa-title" placeholder="Title / Task name" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white outline-none focus:border-cyan-500/50">
+            <select id="qa-type" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white outline-none">
+                <option value="task">Task / Study item</option>
+                <option value="artwork">Artwork</option>
+                <option value="project">Project milestone</option>
+            </select>
+            <select id="qa-priority" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white outline-none">
+                <option value="high">High Priority</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+            </select>
+            <button onclick="addQuickItem()" class="w-full py-2.5 bg-cyan-500/25 text-cyan-300 rounded-xl border border-cyan-500/30 hover:bg-cyan-500/40 font-medium">Add Item</button>
+        </div>
+    </div>
+</div>
+
+<!-- SEARCH MODAL -->
+<div class="modal-overlay" id="search-modal">
+    <div class="modal-box">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-white">Global Search</h2>
+            <button onclick="closeSearch()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <input type="text" id="search-input" placeholder="Search chapters, tasks, projects, artwork..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white outline-none focus:border-cyan-500/50 mb-4" oninput="runSearch()">
+        <div id="search-results" class="space-y-2 text-sm max-h-64 overflow-y-auto scroll-thin">
+            <p class="text-gray-500 text-center py-4">Type to search...</p>
+        </div>
+    </div>
+</div>
+
+<!-- FOCUS TIMER MODAL -->
+<div class="modal-overlay" id="focus-modal">
+    <div class="modal-box" style="max-width:420px; text-align:center; background:#0f172a; border:1px solid rgba(34,211,238,0.25);">
+        <h2 class="text-xl font-bold text-white mb-1">Focus Mode</h2>
+        <p class="text-cyan-400 text-sm mb-6" id="focus-task-name">Deep Work Session</p>
+        <div class="text-6xl font-mono text-white mb-8 tracking-widest font-light" id="focus-time-display">25:00</div>
+        <div class="flex justify-center gap-4 mb-6">
+            <button onclick="startFocusTimer()" class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xl hover:bg-emerald-500/35"><i class="fa-solid fa-play"></i></button>
+            <button onclick="pauseFocusTimer()" class="w-14 h-14 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 flex items-center justify-center text-xl hover:bg-yellow-500/35"><i class="fa-solid fa-pause"></i></button>
+            <button onclick="stopFocusTimer()" class="w-14 h-14 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-xl hover:bg-rose-500/35"><i class="fa-solid fa-stop"></i></button>
+        </div>
+        <div class="flex justify-center gap-2 mb-4 text-xs">
+            <button onclick="setFocusMinutes(15)" class="px-3 py-1 rounded-lg bg-white/5 text-slate-300 border border-white/10 hover:border-cyan-500/40">15m</button>
+            <button onclick="setFocusMinutes(25)" class="px-3 py-1 rounded-lg bg-white/5 text-slate-300 border border-white/10 hover:border-cyan-500/40">25m</button>
+            <button onclick="setFocusMinutes(45)" class="px-3 py-1 rounded-lg bg-white/5 text-slate-300 border border-white/10 hover:border-cyan-500/40">45m</button>
+            <button onclick="setFocusMinutes(60)" class="px-3 py-1 rounded-lg bg-white/5 text-slate-300 border border-white/10 hover:border-cyan-500/40">60m</button>
+        </div>
+        <button onclick="closeFocusTimer()" class="text-sm text-slate-500 hover:text-white underline">Exit Focus Mode</button>
+    </div>
+</div>
+
+<!-- CHAPTER WORKSPACE MODAL -->
+<div class="modal-overlay" id="chapter-modal">
+    <div class="modal-box" style="max-width:640px; padding:0; overflow:hidden;">
+        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-slate-900/80">
+            <h2 class="text-lg font-bold text-white" id="chapter-modal-title">Chapter Workspace</h2>
+            <button onclick="closeChapterModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="flex border-b border-white/10 px-3 pt-2 gap-1 overflow-x-auto bg-slate-900/50">
+            <button class="chapter-tab active px-3 py-2 text-sm text-cyan-400 border-b-2 border-cyan-400 font-medium" data-tab="c-overview" onclick="switchChapterTab(this)">Overview</button>
+            <button class="chapter-tab px-3 py-2 text-sm text-slate-400 border-b-2 border-transparent font-medium" data-tab="c-learning" onclick="switchChapterTab(this)">Learning</button>
+            <button class="chapter-tab px-3 py-2 text-sm text-slate-400 border-b-2 border-transparent font-medium" data-tab="c-practice" onclick="switchChapterTab(this)">Practice</button>
+            <button class="chapter-tab px-3 py-2 text-sm text-slate-400 border-b-2 border-transparent font-medium" data-tab="c-tests" onclick="switchChapterTab(this)">Tests</button>
+        </div>
+        <div class="p-5 text-sm max-h-[55vh] overflow-y-auto scroll-thin">
+            <div id="c-overview" class="chapter-pane text-slate-300">
+                <p class="mb-2"><strong class="text-white">Importance:</strong> —</p>
+                <p class="mb-2"><strong class="text-white">Prerequisites:</strong> —</p>
+                <p class="mb-4"><strong class="text-white">Status:</strong> Not started</p>
+                <label class="block text-xs text-slate-500 mb-1">Chapter notes</label>
+                <textarea id="chapter-notes" class="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-white h-28 resize-none outline-none focus:border-cyan-500/40" placeholder="Add notes..."></textarea>
+                <button onclick="saveChapterNotes()" class="mt-3 px-4 py-2 bg-cyan-500/20 text-cyan-300 rounded-lg border border-cyan-500/30 text-xs hover:bg-cyan-500/30">Save Notes</button>
+            </div>
+            <div id="c-learning" class="chapter-pane hidden text-slate-300">
+                <p class="text-slate-500 text-center py-6">Learning checklist will appear when you add topics.</p>
+            </div>
+            <div id="c-practice" class="chapter-pane hidden text-slate-300">
+                <p class="mb-3">Log practice sessions and accuracy.</p>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-slate-900 rounded-xl p-3 border border-white/10"><div class="text-xs text-slate-500">Attempted</div><div class="text-xl text-white font-bold">0</div></div>
+                    <div class="bg-slate-900 rounded-xl p-3 border border-white/10"><div class="text-xs text-slate-500">Accuracy</div><div class="text-xl text-cyan-400 font-bold">—</div></div>
+                </div>
+                <button onclick="openFocusTimer(document.getElementById('chapter-modal-title').textContent)" class="px-4 py-2 bg-cyan-500/20 text-cyan-300 rounded-lg border border-cyan-500/30 text-xs">Start Practice Timer</button>
+            </div>
+            <div id="c-tests" class="chapter-pane hidden text-slate-300">
+                <p class="mb-2">Record test scores and flag weak areas.</p>
+                <p class="text-slate-500 text-center py-4">No tests recorded yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== NAVIGATION & THEME ==========
+    document.addEventListener("DOMContentLoaded", () => {
+        const navLinks = document.querySelectorAll('.nav-link[data-target]');
+        const body = document.body;
+        let isSwitching = false;
+
+        function switchPage(targetId) {
+            if (isSwitching) return;
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            const current = document.querySelector('.page.active-page');
+            if (current && current.id === targetId) {
+                // Already on this page — smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            isSwitching = true;
+
+            // Update nav active state
+            navLinks.forEach(l => l.classList.remove('active'));
+            const activeLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+            if (activeLink) activeLink.classList.add('active');
+
+            // Theme
+            body.setAttribute('data-theme', targetId);
+
+            const finish = () => {
+                target.style.display = 'block';
+                target.classList.add('active-page');
+                void target.offsetWidth;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        target.classList.add('fade-in');
+                        // Re-trigger entrance animations
+                        target.querySelectorAll('.anim-fade-up, .stagger-children > *').forEach(el => {
+                            el.style.animation = 'none';
+                            void el.offsetWidth;
+                            el.style.animation = '';
+                        });
+                        // Replay progress bars
+                        if (typeof replayBarAnimations === 'function') replayBarAnimations(target);
+                        // Count-up on progress page
+                        if (targetId === 'progress' && typeof triggerProgressCounts === 'function') {
+                            setTimeout(triggerProgressCounts, 200);
+                        }
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        isSwitching = false;
+                    });
+                });
+            };
+
+            if (current) {
+                current.classList.remove('fade-in');
+                current.classList.add('fade-out');
+                setTimeout(() => {
+                    current.classList.remove('active-page', 'fade-out');
+                    current.style.display = 'none';
+                    finish();
+                }, 300);
+            } else {
+                finish();
+            }
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetId = link.getAttribute('data-target');
+                if (targetId) switchPage(targetId);
+            });
+        });
+
+        // Expose for search / programmatic nav
+        window.goToPage = function(id) {
+            switchPage(id);
+            closeSearch();
+        };
+
+        // Initial page
+        const initial = document.querySelector('.page.active-page');
+        if (initial) {
+            initial.style.display = 'block';
+            setTimeout(() => initial.classList.add('fade-in'), 60);
+        }
+
+        // Load review notes
+        const notes = localStorage.getItem('vecto_review_notes');
+        if (notes) {
+            const el = document.getElementById('review-notes');
+            if (el) el.value = notes;
+        }
+    });
+
+    // ========== PLANNER TASK TOGGLE ==========
+    function toggleTask(el) {
+        toggleTaskDelight(el);
+    }
+
+    // Restore task states
+    (function() {
+        const state = JSON.parse(localStorage.getItem('vecto_tasks') || '{}');
+        document.querySelectorAll('.neu-task[data-id]').forEach(el => {
+            if (state[el.dataset.id]) el.classList.add('completed');
+        });
+    })();
+
+    // Toast helper
+    function showToast(message) {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fa-solid fa-circle-info text-cyan-400"></i><span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'toastIn 0.35s reverse forwards';
+            setTimeout(() => toast.remove(), 320);
+        }, 3000);
+    }
+
+    // ========== SUGGESTIONS ==========
+    function acceptSuggestion(btn) {
+        const card = btn.closest('.clay-card') || btn.closest('.bento-card');
+        card.innerHTML = `<div class="text-center py-4"><i class="fa-solid fa-check text-green-500 text-2xl mb-2"></i><p class="text-sm text-gray-600">Suggestion accepted. Added to today's priorities.</p></div>`;
+    }
+    function dismissSuggestion(btn) {
+        const card = btn.closest('.clay-card') || btn.closest('.bento-card');
+        card.innerHTML = `<div class="text-center py-4"><p class="text-sm text-gray-500">Suggestion dismissed. You stay in control.</p></div>`;
+    }
+
+    // ========== REVIEW ==========
+    function saveReview() {
+        const val = document.getElementById('review-notes').value;
+        localStorage.setItem('vecto_review_notes', val);
+        if (typeof showToast === 'function') showToast('Weekly review saved');
+        else alert('Weekly review saved locally.');
+    }
+
+    // ========== SETTINGS ==========
+    function openSettings() { document.getElementById('settings-modal').classList.add('open'); }
+    function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+
+    // ========== QUICK ADD ==========
+    function openQuickAdd() { document.getElementById('quickadd-modal').classList.add('open'); }
+    function closeQuickAdd() { document.getElementById('quickadd-modal').classList.remove('open'); }
+    function addQuickItem() {
+        const title = document.getElementById('qa-title').value.trim();
+        if (!title) return alert('Please enter a title');
+        let items = JSON.parse(localStorage.getItem('vecto_quick') || '[]');
+        items.push({
+            title,
+            type: document.getElementById('qa-type').value,
+            priority: document.getElementById('qa-priority').value,
+            ts: Date.now()
+        });
+        localStorage.setItem('vecto_quick', JSON.stringify(items));
+        closeQuickAdd();
+        document.getElementById('qa-title').value = '';
+        if (typeof showToast === 'function') showToast('Item added (stored locally)');
+        else alert('Item added (stored locally).');
+    }
+
+    // ========== SEARCH ==========
+    function openSearch() { document.getElementById('search-modal').classList.add('open'); document.getElementById('search-input').focus(); }
+    function closeSearch() { document.getElementById('search-modal').classList.remove('open'); }
+    const searchIndex = []; // fills when you add your own data
+    function runSearch() {
+        const q = document.getElementById('search-input').value.toLowerCase().trim();
+        const box = document.getElementById('search-results');
+        if (!q) { box.innerHTML = '<p class="text-gray-500 text-center py-4">Type to search...</p>'; return; }
+        const hits = searchIndex.filter(i => i.t.toLowerCase().includes(q) || i.c.toLowerCase().includes(q));
+        if (!hits.length) { box.innerHTML = '<p class="text-gray-500 text-center py-4">No results</p>'; return; }
+        box.innerHTML = hits.map(h => `
+            <div class="flex justify-between items-center bg-gray-800/80 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-700/80" onclick="goToPage('${h.p}')">
+                <div><div class="text-white font-medium">${h.t}</div><div class="text-xs text-gray-400">${h.c}</div></div>
+                <i class="fa-solid fa-arrow-right text-gray-500 text-xs"></i>
+            </div>
+        `).join('');
+    }
+
+    // ========== EXPORT ==========
+    function exportData() {
+        const data = {
+            tasks: JSON.parse(localStorage.getItem('vecto_tasks') || '{}'),
+            review: localStorage.getItem('vecto_review_notes') || '',
+            quick: JSON.parse(localStorage.getItem('vecto_quick') || '[]'),
+            exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'vectoplan-backup.json';
+        a.click();
+    }
+
+    // Close modals on outside click
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => {
+            if (e.target === m) {
+                m.classList.remove('open');
+                if (m.id === 'focus-modal') pauseFocusTimer();
+            }
+        });
+    });
+
+    // ========== FOCUS TIMER ==========
+    let focusTimerInterval = null;
+    let focusTimeLeft = 25 * 60;
+
+    function updateFocusDisplay() {
+        const el = document.getElementById('focus-time-display');
+        if (!el) return;
+        const m = Math.floor(focusTimeLeft / 60).toString().padStart(2, '0');
+        const s = (focusTimeLeft % 60).toString().padStart(2, '0');
+        el.textContent = `${m}:${s}`;
+    }
+
+    function openFocusTimer(taskName) {
+        document.getElementById('focus-task-name').textContent = taskName || 'Deep Work Session';
+        document.getElementById('focus-modal').classList.add('open');
+        updateFocusDisplay();
+    }
+    function closeFocusTimer() {
+        pauseFocusTimer();
+        document.getElementById('focus-modal').classList.remove('open');
+    }
+    function setFocusMinutes(mins) {
+        pauseFocusTimer();
+        focusTimeLeft = mins * 60;
+        updateFocusDisplay();
+    }
+    function startFocusTimer() {
+        if (focusTimerInterval) return;
+        focusTimerInterval = setInterval(() => {
+            if (focusTimeLeft > 0) {
+                focusTimeLeft--;
+                updateFocusDisplay();
+            } else {
+                pauseFocusTimer();
+                if (typeof showToast === 'function') showToast('Focus session complete! 🎉');
+            }
+        }, 1000);
+    }
+    function pauseFocusTimer() {
+        clearInterval(focusTimerInterval);
+        focusTimerInterval = null;
+    }
+    function stopFocusTimer() {
+        pauseFocusTimer();
+        focusTimeLeft = 25 * 60;
+        updateFocusDisplay();
+    }
+
+    // ========== CHAPTER MODAL ==========
+    function openChapterModal(subject, chapter) {
+        document.getElementById('chapter-modal-title').textContent = `${subject}: ${chapter}`;
+        const notes = localStorage.getItem(`vecto_notes_${subject}_${chapter}`) || '';
+        document.getElementById('chapter-notes').value = notes;
+        // reset tabs
+        document.querySelectorAll('.chapter-tab').forEach((t, i) => {
+            t.classList.toggle('active', i === 0);
+            t.classList.toggle('text-cyan-400', i === 0);
+            t.classList.toggle('border-cyan-400', i === 0);
+            t.classList.toggle('text-slate-400', i !== 0);
+            t.classList.toggle('border-transparent', i !== 0);
+        });
+        document.querySelectorAll('.chapter-pane').forEach((p, i) => {
+            p.classList.toggle('hidden', i !== 0);
+        });
+        document.getElementById('chapter-modal').classList.add('open');
+    }
+    function closeChapterModal() {
+        document.getElementById('chapter-modal').classList.remove('open');
+    }
+    function switchChapterTab(btn) {
+        const id = btn.getAttribute('data-tab');
+        document.querySelectorAll('.chapter-tab').forEach(t => {
+            t.classList.remove('active', 'text-cyan-400', 'border-cyan-400');
+            t.classList.add('text-slate-400', 'border-transparent');
+        });
+        btn.classList.add('active', 'text-cyan-400', 'border-cyan-400');
+        btn.classList.remove('text-slate-400', 'border-transparent');
+        document.querySelectorAll('.chapter-pane').forEach(p => p.classList.add('hidden'));
+        const pane = document.getElementById(id);
+        if (pane) pane.classList.remove('hidden');
+    }
+    function saveChapterNotes() {
+        const title = document.getElementById('chapter-modal-title').textContent;
+        const key = 'vecto_notes_' + title.replace(/:\s*/, '_').replace(/\s+/g, '_');
+        localStorage.setItem(key, document.getElementById('chapter-notes').value);
+        if (typeof showToast === 'function') showToast('Chapter notes saved');
+    }
+
+
+/* =========================================================
+   VECTOPLAN — DELIGHT JS HELPERS
+   ========================================================= */
+
+// ---------- ENHANCED TOGGLE TASK ----------
+function toggleTaskDelight(el) {
+    const wasCompleted = el.classList.contains('completed');
+    el.classList.toggle('completed');
+    const completed = el.classList.contains('completed');
+    const id = el.dataset.id;
+
+    let state = JSON.parse(localStorage.getItem('vecto_tasks') || '{}');
+    state[id] = completed;
+    localStorage.setItem('vecto_tasks', JSON.stringify(state));
+
+    if (completed && !wasCompleted) {
+        el.classList.add('just-completed');
+        setTimeout(() => el.classList.remove('just-completed'), 600);
+        if (typeof showToast === 'function') showToast('Task marked complete ✓');
+    } else {
+        if (typeof showToast === 'function') showToast('Task reopened');
+    }
+}
+
+// ---------- RE-TRIGGER BAR ANIMATIONS ----------
+function replayBarAnimations(container) {
+    if (!container) return;
+    container.querySelectorAll('.clay-bar-fill, .bento-card .bg-gradient-to-r').forEach(bar => {
+        bar.style.animation = 'none';
+        void bar.offsetWidth;
+        bar.style.animation = '';
+    });
+}
+
+// ---------- COUNT UP (simple) ----------
+function animateCountUp(el, target, duration = 900) {
+    if (!el) return;
+    const start = 0;
+    const startTime = performance.now();
+    const isPercent = String(target).includes('%');
+    const num = parseInt(target, 10) || 0;
+
+    function tick(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (num - start) * eased);
+        el.textContent = isPercent ? current + '%' : current;
+        if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+// Hook count-ups when Progress page becomes visible
+function triggerProgressCounts() {
+    const page = document.getElementById('progress');
+    if (!page || !page.classList.contains('active-page')) return;
+    const cards = page.querySelectorAll('.progress-card .text-3xl');
+    cards.forEach(el => {
+        const final = el.textContent.trim();
+        animateCountUp(el, final, 800);
+    });
+}
+
+// ---------- TIME-BASED GREETING ----------
+function updateHomeGreeting() {
+    const greetEl = document.getElementById('home-greeting');
+    const dateEl = document.getElementById('home-date');
+    if (!greetEl) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    let greeting = 'Good evening, Commander';
+    if (hour >= 5 && hour < 12) greeting = 'Good morning, Commander';
+    else if (hour >= 12 && hour < 17) greeting = 'Good afternoon, Commander';
+    else if (hour >= 17 && hour < 21) greeting = 'Good evening, Commander';
+    else greeting = 'Good night, Commander';
+
+    greetEl.textContent = greeting;
+
+    if (dateEl) {
+        const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+        dateEl.textContent = now.toLocaleDateString('en-IN', options);
+    }
+}
+
+// Call on load
+document.addEventListener('DOMContentLoaded', updateHomeGreeting);
+
+</script>
+</body>
+</html>
